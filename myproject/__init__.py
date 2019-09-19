@@ -1,32 +1,61 @@
-from myproject.core.views import core
-from myproject.error_pages.handlers import error_pages
-from myproject.users.views import users
+import os
 from flask import Flask
 from flask_sqlalchemy import SQLAlchemy
-import os
 from flask_migrate import Migrate
 from flask_login import LoginManager
 
+
 app = Flask(__name__)
-app.register_blueprint(error_pages)
-app.register_blueprint(core)
-app.register_blueprint(users)
 
+#############################################################################
+############ CONFIGURATIONS (CAN BE SEPARATE CONFIG.PY FILE) ###############
+###########################################################################
 
-# DATABASE
-basedir = os.path.dirname(__file__)
+# Remember you need to set your environment variables at the command line
+# when you deploy this to a real website.
+# export SECRET_KEY=mysecret
+# set SECRET_KEY=mysecret
+app.config['SECRET_KEY'] = 'mysecret'
 
-# the various configurations of the application
-app.config['SECRET_KEY'] = 'mysecretkey'
-app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///' + \
-    os.path.join(basedir, 'data.sqlite')
+#################################
+### DATABASE SETUPS ############
+###############################
+
+basedir = os.path.abspath(os.path.dirname(__file__))
+app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///' + os.path.join(basedir, 'data.sqlite')
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
-# db definations
-db = SQLAlchemy(app)
-Migrate(app, db)
 
-# Login
+db = SQLAlchemy(app)
+Migrate(app,db)
+
+
+###########################
+#### LOGIN CONFIGS #######
+#########################
+
 login_manager = LoginManager()
+
+# We can now pass in our app to the login manager
 login_manager.init_app(app)
-login_manager.login_view = 'users.login'
+
+# Tell users what view to go to when they need to login.
+login_manager.login_view = "users.login"
+
+
+###########################
+#### BLUEPRINT CONFIGS #######
+#########################
+
+# Import these at the top if you want
+# We've imported them here for easy reference
+from myproject.core.views import core
+from myproject.users.views import users
+from myproject.blog_posts.views import blog_posts
+from myproject.error_pages.handlers import error_pages
+
+# Register the apps
+app.register_blueprint(users)
+app.register_blueprint(blog_posts)
+app.register_blueprint(core)
+app.register_blueprint(error_pages)
